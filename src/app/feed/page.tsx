@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "~/components/ui/Button";
-import { Header } from "~/components/ui/Header";
+import { PageLayout } from "~/components/ui/PageLayout";
 import { WalletConnection } from "~/components/ui/WalletConnection";
 import { fetchWithAuth } from "~/lib/auth";
 import { truncateAddress } from "~/lib/truncateAddress";
@@ -68,13 +68,13 @@ function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
 
       {/* User Comment */}
       <div className="mb-4">
-        <p className="text-lg text-gray-900">{post.comment}</p>
+        <p className="text-lg text-black">{post.comment}</p>
       </div>
 
       {/* Transaction Details */}
       <div className="bg-gray-50 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="font-medium text-gray-900">Transaction Details</h4>
+          <h4 className="font-medium text-black">Transaction Details</h4>
           <a
             href={`https://etherscan.io/tx/${post.transaction.hash}`}
             target="_blank"
@@ -192,43 +192,31 @@ export default function Feed() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
-        
-        <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
+      <PageLayout title="Social Feed">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+            <h2 className="text-xl font-semibold text-black mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-600 mb-6">Connect your wallet to see the social feed and interact with posts!</p>
             <WalletConnection onConnect={fetchPosts} />
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      
-      <main className="flex-1 max-w-2xl mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Social Feed
-            </h1>
-            <p className="text-gray-600">
-              See what the crypto community is saying about their trades
-            </p>
-          </div>
-          
-          <div className="space-x-2">
+    <PageLayout title="Social Feed">
+            <div className="p-4 space-y-6">
+        {/* Action Buttons */}
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-black">Ready to make a transaction?</h3>
+              <p className="text-sm text-gray-600">Send ETH and share your crypto puns!</p>
+            </div>
             <Link href="/send">
-              <Button>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 💸 Send ETH
-              </Button>
-            </Link>
-            <Link href="/create">
-              <Button className="bg-gray-500 hover:bg-gray-600">
-                Browse Transactions
               </Button>
             </Link>
           </div>
@@ -296,9 +284,7 @@ export default function Feed() {
             )}
           </>
         )}
-      </main>
-      
-      {/* Footer removed since it requires activeTab/setActiveTab props */}
-    </div>
+      </div>
+    </PageLayout>
   );
 }

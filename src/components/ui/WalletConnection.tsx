@@ -25,7 +25,7 @@ export function WalletConnection({ onConnect }: WalletConnectionProps) {
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-black">
             {truncateAddress(address)}
           </span>
         </div>
@@ -42,7 +42,7 @@ export function WalletConnection({ onConnect }: WalletConnectionProps) {
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+        <h3 className="text-lg font-semibold mb-2 text-black">Connect Your Wallet</h3>
         <p className="text-gray-600 text-sm mb-4">
           Choose a wallet to connect and start sharing your trading activity
         </p>

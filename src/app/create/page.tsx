@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "~/components/ui/Button";
-import { Header } from "~/components/ui/Header";
+import { PageLayout } from "~/components/ui/PageLayout";
 import { WalletConnection } from "~/components/ui/WalletConnection";
 import { fetchWithAuth } from "~/lib/auth";
 import { truncateAddress } from "~/lib/truncateAddress";
@@ -145,27 +145,24 @@ export default function CreatePost() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
-        
-        <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
-            <WalletConnection onConnect={fetchTransactions} />
-          </div>
+      <PageLayout title="Browse Transactions">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+            <h2 className="text-xl font-semibold text-black mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-600 mb-6">Connect your wallet to browse transactions and create posts!</p>
+            <WalletConnection />
+
+  return (
+    </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      
-      <main className="flex-1 max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Create a Post
-          </h1>
+    <PageLayout title="Browse Transactions">
+      <div className="p-4 space-y-6">
+        <div className="mb-6">
           <p className="text-gray-600">
             Select a recent transaction and add your witty commentary
           </p>
@@ -257,9 +254,7 @@ export default function CreatePost() {
             )}
           </>
         )}
-      </main>
-      
-      {/* Footer removed since it requires activeTab/setActiveTab props */}
-    </div>
+      </div>
+    </PageLayout>
   );
 }

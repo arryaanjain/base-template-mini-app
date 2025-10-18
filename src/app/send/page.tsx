@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { useState, useEffect } from "react";
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useChainId } from "wagmi";
 import { parseEther } from "viem";
 import { Button } from "~/components/ui/Button";
-import { Header } from "~/components/ui/Header";
+import { PageLayout } from "~/components/ui/PageLayout";
 import { WalletConnection } from "~/components/ui/WalletConnection";
 import { fetchWithAuth } from "~/lib/auth";
 
 export default function SendTransaction() {
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [comment, setComment] = useState("");
@@ -29,11 +30,26 @@ export default function SendTransaction() {
       hash: txHash,
     });
 
+  // Debug logging
+  useEffect(() => {
+    console.log("Transaction state:", {
+      txHash,
+      isConfirming,
+      isConfirmed,
+      step,
+      completedTxHash,
+      chainId
+    });
+  }, [txHash, isConfirming, isConfirmed, step, completedTxHash, chainId]);
+
   // When transaction is confirmed, move to comment step
-  if (isConfirmed && txHash && step === "send") {
-    setCompletedTxHash(txHash);
-    setStep("comment");
-  }
+  useEffect(() => {
+    if (isConfirmed && txHash && step === "send") {
+      console.log("Transaction confirmed! Moving to comment step");
+      setCompletedTxHash(txHash);
+      setStep("comment");
+    }
+  }, [isConfirmed, txHash, step]);
 
   const handleSendTransaction = async () => {
     if (!recipientAddress || !amount) return;
@@ -101,28 +117,23 @@ export default function SendTransaction() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
+      <PageLayout title="Send ETH">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+            <h2 className="text-xl font-semibold text-black mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-600 mb-6">Connect your wallet to start sending transactions and sharing your crypto puns!</p>
             <WalletConnection />
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      
-      <main className="flex-1 max-w-2xl mx-auto px-4 py-8">
+    <PageLayout title="Send ETH">
+      <div className="p-4 space-y-6">
         {step === "send" && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Send ETH Transaction
-            </h1>
-            
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg mb-6 border-l-4 border-purple-400">
               <h3 className="font-semibold text-purple-900 mb-2">🚀 How it works:</h3>
               <ol className="text-sm text-purple-800 space-y-1">
@@ -135,7 +146,7 @@ export default function SendTransaction() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Recipient Address
                 </label>
                 <input
@@ -143,12 +154,12 @@ export default function SendTransaction() {
                   value={recipientAddress}
                   onChange={(e) => setRecipientAddress(e.target.value)}
                   placeholder="0x..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-500"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Amount (ETH)
                 </label>
                 <input
@@ -157,7 +168,7 @@ export default function SendTransaction() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.001"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-500"
                 />
               </div>
 
@@ -207,11 +218,30 @@ export default function SendTransaction() {
               {txHash && (
                 <div className="bg-green-50 p-4 rounded-lg">
                   <p className="text-green-800 text-sm">
-                    Transaction Hash: {txHash}
+                    <strong>Transaction Hash:</strong> {txHash}
                   </p>
                   {isConfirming && (
+                    <div className="mt-2">
+                      <p className="text-green-600 text-sm mb-2">
+                        Waiting for confirmation...
+                      </p>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Taking too long? You can proceed manually:
+                      </p>
+                      <Button
+                        onClick={() => {
+                          setCompletedTxHash(txHash);
+                          setStep("comment");
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-sm py-2"
+                      >
+                        Skip to Comment
+                      </Button>
+                    </div>
+                  )}
+                  {isConfirmed && (
                     <p className="text-green-600 text-sm mt-2">
-                      Waiting for confirmation...
+                      ✅ Transaction confirmed! Moving to comment step...
                     </p>
                   )}
                 </div>
@@ -221,14 +251,14 @@ export default function SendTransaction() {
         )}
 
         {step === "comment" && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-xl font-bold text-black mb-6">
               🎉 Transaction Complete! Add Your Pun
-            </h1>
+            </h2>
             
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="font-medium text-gray-900 mb-2">Your Transaction:</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-medium text-black mb-2">Your Transaction:</h3>
+              <p className="text-sm text-gray-700">
                 Sent {amount} ETH to {recipientAddress.slice(0, 10)}...{recipientAddress.slice(-8)}
               </p>
               <p className="text-sm text-gray-500">
@@ -238,14 +268,14 @@ export default function SendTransaction() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Add Your Witty Comment / Pun
                 </label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Just sent some ETH... guess you could say I'm feeling generous! 😄"
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 text-black placeholder-gray-500"
                   rows={3}
                   maxLength={280}
                 />
@@ -302,7 +332,7 @@ export default function SendTransaction() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   );
 }

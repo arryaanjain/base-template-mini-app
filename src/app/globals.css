@@ -4,11 +4,11 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
   --card: #ffffff;
-  --card-foreground: #171717;
+  --card-foreground: #000000;
   --popover: #ffffff;
-  --popover-foreground: #171717;
+  --popover-foreground: #000000;
   --primary: #2563eb;
   --primary-foreground: #ffffff;
   --secondary: #f3f4f6;
@@ -24,43 +24,45 @@
   --ring: #2563eb;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #171717;
-    --card-foreground: #ededed;
-    --popover: #171717;
-    --popover-foreground: #ededed;
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-    --secondary: #1f2937;
-    --secondary-foreground: #f3f4f6;
-    --muted: #1f2937;
-    --muted-foreground: #9ca3af;
-    --accent: #1f2937;
-    --accent-foreground: #f3f4f6;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #374151;
-    --input: #374151;
-    --ring: #3b82f6;
-  }
-}
-
+/* Force light mode - no dark mode overrides */
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: #000000 !important;
+  background: #f9fafb !important;
   font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 
+/* Force all text to be black */
 * {
+  color: inherit;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
 
 *::-webkit-scrollbar {
   display: none;
+}
+
+/* Override any white text */
+.text-white {
+  color: #000000 !important;
+}
+
+/* Ensure readable text on all backgrounds */
+.bg-card {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.text-card-foreground {
+  color: #000000 !important;
+}
+
+.text-foreground {
+  color: #000000 !important;
+}
+
+.text-muted-foreground {
+  color: #6b7280 !important;
 }
 
 @layer base {
