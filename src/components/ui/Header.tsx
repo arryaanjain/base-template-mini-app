@@ -131,6 +131,7 @@ export function Header({ neynarUser }: HeaderProps) {
               onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
             >
               {context.user.pfpUrl && (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={context.user.pfpUrl}
                   alt="Profile"
@@ -212,6 +213,7 @@ export function Header({ neynarUser }: HeaderProps) {
           <div className="p-4">
             <div className="flex items-center space-x-3 mb-3">
               {context.user.pfpUrl && (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={context.user.pfpUrl}
                   alt="Profile"

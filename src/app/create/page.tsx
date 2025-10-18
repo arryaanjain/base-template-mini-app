@@ -95,8 +95,9 @@ export default function CreatePost() {
       } else {
         setError(data.error || 'Failed to fetch transactions');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch transactions');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch transactions';
+      setError(errorMessage);
       console.error('Error fetching transactions:', err);
     } finally {
       setIsLoading(false);
