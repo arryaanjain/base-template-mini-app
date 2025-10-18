@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "~/components/ui/Button";
 import { PageLayout } from "~/components/ui/PageLayout";
@@ -75,13 +75,7 @@ export default function CreatePost() {
   const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState('');
 
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchTransactions();
-    }
-  }, [isConnected, address]);
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!address) return;
     
     setIsLoading(true);
@@ -107,7 +101,13 @@ export default function CreatePost() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [address]);
+
+  useEffect(() => {
+    if (isConnected && address) {
+      fetchTransactions();
+    }
+  }, [isConnected, address, fetchTransactions]);
 
   const handleSubmit = async () => {
     if (!selectedTx || !comment.trim()) return;
@@ -136,8 +136,9 @@ export default function CreatePost() {
         const data = await response.json();
         setError(data.error || 'Failed to create post');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to create post');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create post';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

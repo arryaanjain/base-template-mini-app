@@ -1,4 +1,4 @@
-import { createClient } from '@farcaster/quick-auth';
+i// import { sdk } from "@farcaster/frame-sdk"; // Not used currentlyport { createClient } from '@farcaster/quick-auth';
 import { sdk } from '@farcaster/frame-sdk';
 
 const quickAuth = createClient();

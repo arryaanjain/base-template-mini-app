@@ -25,9 +25,10 @@ export default function SendTransaction() {
     data: txHash,
   } = useSendTransaction();
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+  const { isLoading: isConfirming, isSuccess: isConfirmed, error: receiptError } =
     useWaitForTransactionReceipt({
       hash: txHash,
+      confirmations: 1, // Wait for 1 confirmation
     });
 
   // Debug logging
@@ -36,11 +37,12 @@ export default function SendTransaction() {
       txHash,
       isConfirming,
       isConfirmed,
+      receiptError,
       step,
       completedTxHash,
       chainId
     });
-  }, [txHash, isConfirming, isConfirmed, step, completedTxHash, chainId]);
+  }, [txHash, isConfirming, isConfirmed, receiptError, step, completedTxHash, chainId]);
 
   // When transaction is confirmed, move to comment step
   useEffect(() => {
@@ -50,6 +52,19 @@ export default function SendTransaction() {
       setStep("comment");
     }
   }, [isConfirmed, txHash, step]);
+
+  // Fallback: Auto-move to comment after 30 seconds on testnet
+  useEffect(() => {
+    if (txHash && step === "send" && !isConfirmed) {
+      const timer = setTimeout(() => {
+        console.log("Timeout reached, moving to comment step");
+        setCompletedTxHash(txHash);
+        setStep("comment");
+      }, 30000); // 30 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [txHash, step, isConfirmed]);
 
   const handleSendTransaction = async () => {
     if (!recipientAddress || !amount) return;

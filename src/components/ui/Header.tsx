@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { APP_NAME } from "~/lib/constants";
+// import { APP_NAME } from "~/lib/constants"; // Not used
 import sdk from "@farcaster/frame-sdk";
 import { useMiniApp } from "@neynar/react";
 import { useAccount, useDisconnect } from "wagmi";
@@ -39,7 +39,6 @@ export function Header({ neynarUser }: HeaderProps) {
   const { disconnect } = useDisconnect();
   const pathname = usePathname();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  const [hasClickedPfp, setHasClickedPfp] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
@@ -129,10 +128,7 @@ export function Header({ neynarUser }: HeaderProps) {
           {context?.user && (
             <div
               className="cursor-pointer"
-              onClick={() => {
-                setIsUserDropdownOpen(!isUserDropdownOpen);
-                setHasClickedPfp(true);
-              }}
+              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
             >
               {context.user.pfpUrl && (
                 <img

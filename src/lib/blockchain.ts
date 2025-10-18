@@ -20,6 +20,19 @@ export interface Transaction {
   description: string; // Human readable description
 }
 
+interface EtherscanTransaction {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  gas: string;
+  gasUsed: string;
+  timeStamp: string;
+  blockNumber: string;
+  isError: string;
+  [key: string]: string;
+}
+
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
 
@@ -145,10 +158,10 @@ export class BlockchainReader {
       return [];
     }
 
-    return data.result.map((tx: any) => this.parseTransaction(tx, action));
+    return data.result.map((tx: EtherscanTransaction) => this.parseTransaction(tx, action));
   }
 
-  private parseTransaction(tx: any, action: string): Transaction {
+  private parseTransaction(tx: EtherscanTransaction, action: string): Transaction {
     const timestamp = parseInt(tx.timeStamp) * 1000;
     const valueInEth = (parseInt(tx.value) / 1e18).toFixed(6);
     
@@ -242,7 +255,7 @@ export class BlockchainReader {
   // Helper to format transaction for display
   static formatTransactionForDisplay(tx: Transaction): string {
     const date = new Date(tx.timestamp).toLocaleDateString();
-    const etherscanUrl = `https://etherscan.io/tx/${tx.hash}`;
+    // const etherscanUrl = `https://etherscan.io/tx/${tx.hash}`; // Available for future use
     
     return `${tx.description} on ${date} (${tx.hash.slice(0, 10)}...)`;
   }

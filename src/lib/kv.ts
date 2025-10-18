@@ -15,7 +15,8 @@ export interface Post {
 }
 
 // In-memory fallback storage
-const localStore = new Map<string, FrameNotificationDetails>();
+const localNotificationStore = new Map<string, FrameNotificationDetails>();
+const localPostStore = new Map<string, Post>();
 
 // Use Redis if KV env vars are present, otherwise use in-memory
 const useRedis = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
@@ -35,7 +36,7 @@ export async function getUserNotificationDetails(
   if (redis) {
     return await redis.get<FrameNotificationDetails>(key);
   }
-  return localStore.get(key) || null;
+  return localNotificationStore.get(key) || null;
 }
 
 export async function setUserNotificationDetails(
@@ -46,7 +47,7 @@ export async function setUserNotificationDetails(
   if (redis) {
     await redis.set(key, notificationDetails);
   } else {
-    localStore.set(key, notificationDetails);
+    localNotificationStore.set(key, notificationDetails);
   }
 }
 
@@ -57,7 +58,7 @@ export async function deleteUserNotificationDetails(
   if (redis) {
     await redis.del(key);
   } else {
-    localStore.delete(key);
+    localNotificationStore.delete(key);
   }
 }
 
@@ -99,7 +100,7 @@ export async function createPost(post: Omit<Post, 'id' | 'createdAt' | 'likes' |
     await redis.zadd(userPostsKey, { score: fullPost.createdAt, member: id });
   } else {
     // In-memory fallback
-    localStore.set(postKey, fullPost as any);
+    localPostStore.set(postKey, fullPost);
   }
 
   return fullPost;
@@ -110,7 +111,7 @@ export async function getPost(postId: string): Promise<Post | null> {
   if (redis) {
     return await redis.get<Post>(key);
   }
-  const stored = localStore.get(key);
+  const stored = localPostStore.get(key);
   return stored ? (stored as unknown as Post) : null;
 }
 

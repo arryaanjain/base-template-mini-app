@@ -7,40 +7,39 @@ import { PageLayout } from "~/components/ui/PageLayout";
 import { WalletConnection } from "~/components/ui/WalletConnection";
 import { fetchWithAuth } from "~/lib/auth";
 import { truncateAddress } from "~/lib/truncateAddress";
-import type { Post } from "~/lib/kv";
+import type { Post } from "~/lib/supabase";
 import Link from "next/link";
 
 interface PostCardProps {
   post: Post;
-  currentUserFid?: number;
-  onLike: (postId: string, isLiked: boolean) => void;
+  currentUserAddress?: string;
+  onLike: (postId: string) => void;
 }
 
-function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
-  const isLiked = currentUserFid ? post.likedBy.includes(currentUserFid) : false;
+function PostCard({ post, currentUserAddress, onLike }: PostCardProps) {
+  const isLiked = currentUserAddress ? post.liked_by.includes(currentUserAddress) : false;
   
   const formatValue = () => {
-    if (post.transaction.tokenValue && post.transaction.tokenSymbol) {
-      return `${post.transaction.tokenValue} ${post.transaction.tokenSymbol}`;
+    if (post.transaction_data.tokenValue && post.transaction_data.tokenSymbol) {
+      return `${post.transaction_data.tokenValue} ${post.transaction_data.tokenSymbol}`;
     }
-    if (post.transaction.valueInEth !== '0.000000') {
-      return `${post.transaction.valueInEth} ETH`;
+    if (post.transaction_data.valueInEth !== '0.000000') {
+      return `${post.transaction_data.valueInEth} ETH`;
     }
     return 'Contract interaction';
   };
 
   const getTypeColor = () => {
-    switch (post.transaction.type) {
-      case 'swap': return 'bg-blue-100 text-blue-800';
-      case 'nft_mint': return 'bg-purple-100 text-purple-800';
+    switch (post.transaction_data.type) {
+      case 'eth_transfer': return 'bg-blue-100 text-blue-800';
       case 'token_transfer': return 'bg-green-100 text-green-800';
-      case 'contract_call': return 'bg-orange-100 text-orange-800';
+      case 'contract_interaction': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const handleLike = () => {
-    onLike(post.id, isLiked);
+    onLike(post.id);
   };
 
   return (
@@ -49,20 +48,20 @@ function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-            {post.walletAddress.slice(2, 4).toUpperCase()}
+            {post.wallet_address.slice(2, 4).toUpperCase()}
           </div>
           <div>
             <p className="font-medium text-gray-900">
-              {truncateAddress(post.walletAddress)}
+              {truncateAddress(post.wallet_address)}
             </p>
             <p className="text-sm text-gray-500">
-              {new Date(post.createdAt).toLocaleDateString()}
+              {new Date(post.created_at).toLocaleDateString()}
             </p>
           </div>
         </div>
         
         <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeColor()}`}>
-          {post.transaction.type.replace('_', ' ').toUpperCase()}
+          {post.transaction_data.type.replace('_', ' ').toUpperCase()}
         </span>
       </div>
 
@@ -76,7 +75,7 @@ function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium text-black">Transaction Details</h4>
           <a
-            href={`https://etherscan.io/tx/${post.transaction.hash}`}
+            href={`https://etherscan.io/tx/${post.transaction_data.hash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 text-sm"
@@ -85,17 +84,17 @@ function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
           </a>
         </div>
         
-        <p className="text-gray-700 mb-2">{post.transaction.description}</p>
+        <p className="text-gray-700 mb-2">{post.transaction_data.description}</p>
         
         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
           <div>
             <span className="font-medium">Value:</span> {formatValue()}
           </div>
           <div>
-            <span className="font-medium">To:</span> {truncateAddress(post.transaction.to)}
+            <span className="font-medium">To:</span> {truncateAddress(post.transaction_data.to)}
           </div>
           <div className="col-span-2">
-            <span className="font-medium">Hash:</span> {truncateAddress(post.transaction.hash)}
+            <span className="font-medium">Hash:</span> {truncateAddress(post.transaction_data.hash)}
           </div>
         </div>
       </div>
@@ -115,7 +114,7 @@ function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
         </button>
         
         <div className="flex items-center space-x-4 text-sm text-gray-500">
-          <span>{new Date(post.createdAt).toLocaleTimeString()}</span>
+          <span>{new Date(post.created_at).toLocaleTimeString()}</span>
         </div>
       </div>
     </div>
@@ -123,11 +122,10 @@ function PostCard({ post, currentUserFid, onLike }: PostCardProps) {
 }
 
 export default function Feed() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentUserFid, setCurrentUserFid] = useState<number | undefined>();
 
   useEffect(() => {
     if (isConnected) {
@@ -149,40 +147,30 @@ export default function Feed() {
       } else {
         setError(data.error || 'Failed to fetch posts');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch posts');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch posts';
+      setError(errorMessage);
       console.error('Error fetching posts:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLike = async (postId: string, isCurrentlyLiked: boolean) => {
+  const handleLike = async (postId: string) => {
+    if (!address) return;
+    
     try {
-      const action = isCurrentlyLiked ? 'unlike' : 'like';
       const response = await fetchWithAuth('/api/posts', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId, action })
+        body: JSON.stringify({ postId, userAddress: address })
       });
 
       if (response.ok) {
+        const { post: updatedPost } = await response.json();
         // Update the post in local state
         setPosts(prevPosts => 
-          prevPosts.map(post => {
-            if (post.id === postId) {
-              const newLikedBy = isCurrentlyLiked 
-                ? post.likedBy.filter(fid => fid !== currentUserFid)
-                : [...post.likedBy, currentUserFid!];
-              
-              return {
-                ...post,
-                likes: post.likes + (isCurrentlyLiked ? -1 : 1),
-                likedBy: newLikedBy
-              };
-            }
-            return post;
-          })
+          prevPosts.map(post => post.id === postId ? updatedPost : post)
         );
       }
     } catch (err) {
@@ -268,7 +256,7 @@ export default function Feed() {
                   <PostCard
                     key={post.id}
                     post={post}
-                    currentUserFid={currentUserFid}
+                    currentUserAddress={address}
                     onLike={handleLike}
                   />
                 ))}

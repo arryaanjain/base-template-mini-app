@@ -13,7 +13,7 @@ export function WalletConnection({ onConnect }: WalletConnectionProps) {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const handleConnect = (connector: any) => {
+  const handleConnect = (connector: Parameters<typeof connect>[0]['connector']) => {
     connect({ connector });
     if (onConnect) {
       onConnect();

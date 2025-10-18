@@ -1,14 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { APP_NAME } from "~/lib/constants";
 import { PageLayout } from "~/components/ui/PageLayout";
-import { Button } from "~/components/ui/Button";
 import Link from "next/link";
 
-export default function App(
-  { title }: { title?: string } = { title: APP_NAME }
-) {
+export default function App() {
   return (
     <PageLayout title="CryptoSocial">
       <div className="p-4 space-y-6">

@@ -1,137 +1,99 @@
-import { NextResponse } from 'next/server';
-import { createPost, getRecentPosts, likePost, unlikePost } from '~/lib/kv';
+import { NextRequest, NextResponse } from 'next/server';
+import { createPost, getRecentPosts, likePost } from '~/lib/supabase';
 import type { Transaction } from '~/lib/blockchain';
 
-export async function GET(request: Request) {
-  // For demo purposes, allow public access to view posts
-  // In production, you might want authentication for personalized feeds
-
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    const posts = await getRecentPosts(limit, offset);
+    const limit = parseInt(searchParams.get('limit') || '50');
     
-    return NextResponse.json({
-      success: true,
-      posts,
-      count: posts.length
-    });
+    const posts = await getRecentPosts(limit);
+    
+    return NextResponse.json({ success: true, posts });
   } catch (error: unknown) {
-    console.error('Posts GET error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch posts';
+    console.error('Error fetching posts:', error);
     return NextResponse.json(
-      { error: errorMessage },
+      { success: false, error: 'Failed to fetch posts' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
-  // For demo purposes, use wallet address from request
-  const walletAddress = request.headers.get('authorization') ? 'demo-wallet' : null;
-  if (!walletAddress) {
-    return NextResponse.json({ error: 'Wallet not connected' }, { status: 401 });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { transaction, comment, walletAddress } = body;
-
-    // Validate required fields
+    const { transaction, comment, walletAddress }: { 
+      transaction: Transaction; 
+      comment: string; 
+      walletAddress: string; 
+    } = await request.json();
+    
     if (!transaction || !comment || !walletAddress) {
       return NextResponse.json(
-        { error: 'Missing required fields: transaction, comment, walletAddress' },
+        { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Validate comment length
-    if (comment.length > 280) {
-      return NextResponse.json(
-        { error: 'Comment too long (max 280 characters)' },
-        { status: 400 }
-      );
-    }
-
-    // Validate transaction structure
-    if (!transaction.hash || !transaction.description) {
-      return NextResponse.json(
-        { error: 'Invalid transaction data' },
-        { status: 400 }
-      );
-    }
+    // Convert transaction type to match Supabase Post interface
+    const convertedType = transaction.type === 'contract_call' ? 'contract_interaction' as const :
+                         transaction.type === 'nft_mint' ? 'contract_interaction' as const :
+                         transaction.type === 'swap' ? 'contract_interaction' as const :
+                         transaction.type as 'eth_transfer' | 'token_transfer';
 
     const post = await createPost({
-      fid: 12345, // Mock fid for demo - in production, get from wallet auth
-      walletAddress: walletAddress || 'demo-wallet',
-      transaction: transaction as Transaction,
-      comment: comment.trim()
+      transaction_hash: transaction.hash,
+      wallet_address: walletAddress,
+      comment,
+      transaction_data: {
+        ...transaction,
+        type: convertedType
+      },
+      likes: 0,
+      liked_by: []
     });
 
-    return NextResponse.json({
-      success: true,
-      post
-    });
+    if (post) {
+      return NextResponse.json({ success: true, post }, { status: 201 });
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'Failed to create post' },
+        { status: 500 }
+      );
+    }
   } catch (error: unknown) {
-    console.error('Posts POST error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create post';
+    console.error('Error creating post:', error);
     return NextResponse.json(
-      { error: errorMessage },
+      { success: false, error: 'Failed to create post' },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(request: Request) {
-  const walletAddress = request.headers.get('authorization') ? 'demo-wallet' : null;
-  if (!walletAddress) {
-    return NextResponse.json({ error: 'Wallet not connected' }, { status: 401 });
-  }
-  const fid = 12345; // Mock fid for demo
-
+export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { postId, action } = body;
-
-    if (!postId || !action) {
+    const { postId, userAddress }: { postId: string; userAddress: string } = await request.json();
+    
+    if (!postId || !userAddress) {
       return NextResponse.json(
-        { error: 'Missing postId or action' },
+        { success: false, error: 'Missing postId or userAddress' },
         { status: 400 }
       );
     }
 
-    let success = false;
+    const updatedPost = await likePost(postId, userAddress);
     
-    if (action === 'like') {
-      success = await likePost(postId, fid);
-    } else if (action === 'unlike') {
-      success = await unlikePost(postId, fid);
+    if (updatedPost) {
+      return NextResponse.json({ success: true, post: updatedPost });
     } else {
       return NextResponse.json(
-        { error: 'Invalid action. Use "like" or "unlike"' },
-        { status: 400 }
+        { success: false, error: 'Failed to update post' },
+        { status: 500 }
       );
     }
-
-    if (!success) {
-      return NextResponse.json(
-        { error: `Failed to ${action} post` },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      action,
-      postId
-    });
   } catch (error: unknown) {
-    console.error('Posts PATCH error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update post';
+    console.error('Error updating post:', error);
     return NextResponse.json(
-      { error: errorMessage },
+      { success: false, error: 'Failed to update post' },
       { status: 500 }
     );
   }
