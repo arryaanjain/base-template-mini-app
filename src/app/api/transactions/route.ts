@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '~/lib/auth';
 import { blockchainReader } from '~/lib/blockchain';
 
 export async function GET(request: Request) {
@@ -31,10 +30,11 @@ export async function GET(request: Request) {
       transactions,
       count: transactions.length
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Transactions API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
     return NextResponse.json(
-      { error: error?.message || 'Failed to fetch transactions' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -65,10 +65,11 @@ export async function POST(request: Request) {
       success: true,
       transaction
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Transaction details API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transaction details';
     return NextResponse.json(
-      { error: error?.message || 'Failed to fetch transaction details' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

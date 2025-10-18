@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
       <div tw="flex h-full w-full flex-col justify-center items-center relative bg-purple-600">
         {user?.pfp_url && (
           <div tw="flex w-96 h-96 rounded-full overflow-hidden mb-8 border-8 border-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={user.pfp_url} alt="Profile" tw="w-full h-full object-cover" />
           </div>
         )}

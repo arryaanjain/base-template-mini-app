@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '~/lib/auth';
 import { createPost, getRecentPosts, likePost, unlikePost } from '~/lib/kv';
 import type { Transaction } from '~/lib/blockchain';
 
@@ -19,10 +18,11 @@ export async function GET(request: Request) {
       posts,
       count: posts.length
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Posts GET error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch posts';
     return NextResponse.json(
-      { error: error?.message || 'Failed to fetch posts' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -74,10 +74,11 @@ export async function POST(request: Request) {
       success: true,
       post
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Posts POST error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create post';
     return NextResponse.json(
-      { error: error?.message || 'Failed to create post' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -126,10 +127,11 @@ export async function PATCH(request: Request) {
       action,
       postId
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Posts PATCH error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update post';
     return NextResponse.json(
-      { error: error?.message || 'Failed to update post' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
