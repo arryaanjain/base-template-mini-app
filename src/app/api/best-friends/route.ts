@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { verifyAuth } from '~/lib/auth';
 
-export async function GET(request: Request) {
+export async function GET() {
   const apiKey = process.env.NEYNAR_API_KEY;
 
-  const fid = await verifyAuth(request);
+  const fid = await verifyAuth();
   if (!fid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

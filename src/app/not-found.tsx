@@ -9,7 +9,7 @@ export default function NotFound() {
           <div className="text-6xl mb-4">🤔</div>
           <h1 className="text-2xl font-bold text-black mb-4">Page Not Found</h1>
           <p className="text-gray-600 mb-6">
-            Sorry, we couldn't find the page you're looking for.
+            Sorry, we couldn&apos;t find the page you&apos;re looking for.
           </p>
           <Link 
             href="/" 

@@ -1,5 +1,5 @@
 // Simplified auth for demo purposes - replace with proper auth in production
-export async function verifyAuth(request: Request): Promise<number | null> {
+export async function verifyAuth(): Promise<number | null> {
     // For demo purposes, return a mock FID
     // In production, implement proper JWT verification
     return 12345;
