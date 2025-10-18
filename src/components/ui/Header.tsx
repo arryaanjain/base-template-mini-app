@@ -4,6 +4,9 @@ import { useState } from "react";
 import { APP_NAME } from "~/lib/constants";
 import sdk from "@farcaster/frame-sdk";
 import { useMiniApp } from "@neynar/react";
+import { useAccount } from "wagmi";
+import { WalletConnection } from "./WalletConnection";
+import Link from "next/link";
 
 type HeaderProps = {
   neynarUser?: {
@@ -14,30 +17,55 @@ type HeaderProps = {
 
 export function Header({ neynarUser }: HeaderProps) {
   const { context } = useMiniApp();
+  const { isConnected } = useAccount();
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [hasClickedPfp, setHasClickedPfp] = useState(false);
 
   return (
     <div className="relative">
       <div className="mb-1 py-2 px-3 bg-card text-card-foreground rounded-lg flex items-center justify-between border-[3px] border-double border-primary">
-        <div className="text-lg font-light">Welcome to {APP_NAME}!</div>
-        {context?.user && (
-          <div
-            className="cursor-pointer"
-            onClick={() => {
-              setIsUserDropdownOpen(!isUserDropdownOpen);
-              setHasClickedPfp(true);
-            }}
-          >
-            {context.user.pfpUrl && (
-              <img
-                src={context.user.pfpUrl}
-                alt="Profile"
-                className="w-10 h-10 rounded-full border-2 border-primary"
-              />
-            )}
-          </div>
-        )}
+        <div className="flex items-center space-x-6">
+          <div className="text-lg font-light">CryptoSocial</div>
+          <nav className="hidden md:flex space-x-4">
+            <Link href="/" className="text-sm hover:text-primary transition-colors">
+              Feed
+            </Link>
+            <Link href="/send" className="text-sm hover:text-primary transition-colors">
+              Send ETH
+            </Link>
+            <Link href="/create" className="text-sm hover:text-primary transition-colors">
+              Browse Transactions
+            </Link>
+          </nav>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Wallet Connection Status */}
+          {isConnected ? (
+            <WalletConnection />
+          ) : (
+            <span className="text-sm text-gray-500">Not Connected</span>
+          )}
+          
+          {/* Farcaster User Profile (if available) */}
+          {context?.user && (
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setIsUserDropdownOpen(!isUserDropdownOpen);
+                setHasClickedPfp(true);
+              }}
+            >
+              {context.user.pfpUrl && (
+                <img
+                  src={context.user.pfpUrl}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full border-2 border-primary"
+                />
+              )}
+            </div>
+          )}
+        </div>
       </div>
       {context?.user && (
         <>

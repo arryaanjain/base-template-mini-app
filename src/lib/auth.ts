@@ -42,20 +42,23 @@ export async function getUserInfo(fid: number) {
 // Helper function to make authenticated requests
 export async function fetchWithAuth(url: string, options?: RequestInit) {
     try {
-        // Ensure SDK is initialized
-        if (!sdk.quickAuth) {
-            throw new Error('QuickAuth SDK not initialized');
-        }
-
+        // For our Web3 social app, we'll use a simpler auth approach
+        // In a real app, you'd want proper JWT tokens from wallet signatures
+        
         // If options include a body, ensure Content-Type is set
-        if (options?.body && !options.headers) {
-            options.headers = {
-                'Content-Type': 'application/json',
-            };
-        }
+        const headers = {
+            'Content-Type': 'application/json',
+            // For now, we'll use a simple auth header
+            // In production, implement proper wallet signature authentication
+            'Authorization': 'Bearer wallet-connected',
+            ...options?.headers,
+        };
 
-        // Make the request
-        const response = await sdk.quickAuth.fetch(url, options);
+        // Make the request with standard fetch
+        const response = await fetch(url, {
+            ...options,
+            headers,
+        });
 
         // Handle non-OK responses
         if (!response.ok) {
@@ -67,4 +70,15 @@ export async function fetchWithAuth(url: string, options?: RequestInit) {
         console.error('fetchWithAuth error:', error);
         throw error; // Re-throw to let the caller handle it
     }
+}
+
+// Simple auth verification for our demo
+// In production, implement proper wallet signature verification
+export async function verifyWalletAuth(request: Request): Promise<string | null> {
+    const auth = request.headers.get('authorization');
+    if (!auth?.startsWith('Bearer ')) return null;
+    
+    // For demo purposes, return a mock wallet address
+    // In production, verify the wallet signature and return the actual address
+    return '0x1234567890123456789012345678901234567890';
 }
